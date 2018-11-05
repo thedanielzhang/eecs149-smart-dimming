@@ -1,0 +1,44 @@
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "nrf.h"
+
+const uint8_t out_pin = 3;
+
+// This is the interrupt handler that fires on a compare event
+void TIMER4_IRQHandler(void) {
+	//compare event 0 fires just before the next zero crossing
+	//we want to ensure the triac is off
+	if (NRF_TIMER4->EVENTS_COMPARE[0]) {
+		NRF_TIMER4->EVENTS_COMPARE[0] = 0;
+		NRF_GPIO->OUTSET = 1 << out_pin;
+		NRF_TIMER4->TASKS_CLEAR = 1;
+	//compare event 1 fires when we should turn the triac on
+	} else if (NRF_TIMER4->EVENTS_COMPARE[1]) {
+		NRF_TIMER4->EVENTS_COMPARE[1] = 0;
+		NRF_GPIO->OUTCLR = 1 << out_pin;
+
+	}
+}
+
+int main() {
+	//setup the pwm pin for output
+	NRF_GPIO->DIR |= 1 << out_pin;
+	//turn it on for now
+	NRF_GPIO->OUT |= 1 << out_pin;
+
+	//set up timer to run with prescale of 512, 8 bits, and a compare when
+	//it reaches 255, just before the next zero crossing
+	NRF_TIMER4->MODE = 0;
+	NRF_TIMER4->BITMODE = 0;
+	NRF_TIMER4->PRESCALER = 9;
+	NRF_TIMER4->CC[0] = 260;
+	NRF_TIMER4->CC[1] = 100;
+	NRF_TIMER4->INTENSET = (1 << 16) | (1 << 17);
+	NVIC_EnableIRQ(TIMER4_IRQn);
+	NRF_TIMER4->TASKS_START = 1;
+
+	__WFI();
+}
