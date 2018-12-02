@@ -3,7 +3,11 @@ import sys
 sys.path.append("../")
 from bluepy import btle
 
+device = None
+
 class AppConfig(AppConfig):
     name = 'app'
     print("Connecting...")
-    device = btle.Peripheral("MAC:ADDRESS:1")
+    global device 
+    device = btle.Peripheral("D3:45:72:1D:0C:05", btle.ADDR_TYPE_RANDOM)
+    print(device.getServices())
