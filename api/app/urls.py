@@ -6,5 +6,5 @@ urlpatterns = [
     path('lights/<int:pk>/', views.light_specific),
     path('schedules/', views.schedule_general),
     path('schedules/<int:pk>/', views.schedule_specific),
-    path('scan', views.scan_specific)
+    path('scan', views.scan)
 ]

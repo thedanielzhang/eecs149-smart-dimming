@@ -96,7 +96,7 @@ def schedule_specific(request, pk):
 
 @csrf_exempt
 @api_view(['GET'])
-def scan_specific(request):
+def scan(request):
     # Get all scanned items
     scanner = Scanner().withDelegate(ScanDelegate())
     devices = scanner.scan(10.0)
@@ -105,6 +105,10 @@ def scan_specific(request):
         print("Device %s (%s), RSSI=%d dB" % (dev.addr, dev.addrType, dev.rssi))
         for (adtype, desc, value) in dev.getScanData():
             print("  %s = %s" % (desc, value))
+
+    serializer = ScanSerializer(devices, many=True)
+    return Response(serializer.data)
+
 
 
 
