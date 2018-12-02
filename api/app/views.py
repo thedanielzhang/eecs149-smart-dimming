@@ -8,7 +8,7 @@ from app.models import Schedule, Light
 from app.serializers import ScheduleSerializer, LightSerializer
 from rest_framework.response import Response
 from rest_framework import status
-
+from bluepy.btle import Scanner, DefaultDelegate
 # Create your views here.
 
 @csrf_exempt
@@ -93,3 +93,27 @@ def schedule_specific(request, pk):
     elif request.method == 'DELETE':
         schedule.delete()
         return HttpResponse(status=204)
+
+@csrf_exempt
+@api_view(['GET'])
+def scan_specific(request, pk):
+    # Get all scanned items
+    scanner = Scanner().withDelegate(ScanDelegate())
+    devices = scanner.scan(10.0)
+
+    for dev in devices:
+    print "Device %s (%s), RSSI=%d dB" % (dev.addr, dev.addrType, dev.rssi)
+    for (adtype, desc, value) in dev.getScanData():
+        print "  %s = %s" % (desc, value)
+
+
+
+class ScanDelegate(DefaultDelegate):
+    def __init__(self):
+        DefaultDelegate.__init__(self)
+
+    def handleDiscovery(self, dev, isNewDev, isNewData):
+        if isNewDev:
+            print "Discovered device", dev.addr
+        elif isNewData:
+            print "Received new data from", dev.addr
