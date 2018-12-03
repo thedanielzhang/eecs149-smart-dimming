@@ -2,13 +2,22 @@
 #include <stdlib.h>
 #include "nrf.h"
 
-static const uint32_t out_pin = 2;
+static const uint32_t ac_out_pin = 2;
 static const uint32_t zc_int_pin = 5;
+
+static uint8_t current_dim_level;
+static uint8_t current_source;
+
+const uint8_t SOURCE_MANUAL = 0x1;
+const uint8_t SOURCE_LIGHT_SENSOR = 0x2;
+const uint8_t SOURCE_MOTION = 0x4;
+
+static const uint8_t dim_increment = 5;
 
 //set a new dim level
 //dim_level is an 8-bit value, with 0 representing full brightness,
 //and 255 representing full darkness
-void set_dim_level(uint8_t dim_level) {
+void set_dim_level(uint8_t dim_level, uint8_t source) {
 	//if full darkness or full brightness,
 	//just turn on or off the LED and disable all
 	//interrupts
@@ -18,9 +27,9 @@ void set_dim_level(uint8_t dim_level) {
 		NRF_TIMER4->TASKS_STOP = 1;
 		NRF_TIMER4->TASKS_CLEAR = 1;
 		if (dim_level == 0) {
-			NRF_GPIO->OUTSET = 1 << out_pin;
+			NRF_GPIO->OUTSET = 1 << ac_out_pin;
 		} else {
-			NRF_GPIO->OUTCLR = 1 << out_pin;
+			NRF_GPIO->OUTCLR = 1 << ac_out_pin;
 		}
 	//otherwise, set the second compare register to the dim level and enable interrupts
 	} else {
@@ -28,13 +37,38 @@ void set_dim_level(uint8_t dim_level) {
 		NVIC_EnableIRQ(TIMER4_IRQn);
 		NVIC_EnableIRQ(GPIOTE_IRQn);
 	}
+
+	current_dim_level = dim_level;
+	current_source = source;
+
+	//start/restart timer to send new dim level
+}
+
+uint8_t get_dim_level(void) {
+	return current_dim_level;
+}
+
+void more_dim(uint8_t source) {
+	if (0xFF - current_dim_level < dim_increment) {
+		set_dim_level(0xFF, source);
+	} else {
+		set_dim_level(current_dim_level + dim_increment, source);
+	}
+}
+
+void less_dim(uint8_t source) {
+	if (current_dim_level < dim_increment) {
+		set_dim_level(0, source);
+	} else {
+		set_dim_level(current_dim_level - dim_increment, source);
+	}
 }
 
 void setup_dimmer(void) {
 	//setup the pwm pin for output
-	NRF_GPIO->DIR |= 1 << out_pin;
+	NRF_GPIO->DIR |= 1 << ac_out_pin;
 	//turn it on for now
-	NRF_GPIO->OUT |= 1 << out_pin;
+	NRF_GPIO->OUT |= 1 << ac_out_pin;
 
 	//set up a rising edge interrupt on zc_int_pin
 	NRF_GPIOTE->CONFIG[0] = (1 << 16) | (zc_int_pin << 8) | (1);
@@ -48,7 +82,7 @@ void setup_dimmer(void) {
 	NRF_TIMER4->CC[0] = 255;
 	NRF_TIMER4->CC[1] = 250;
 	NRF_TIMER4->INTENSET = (1 << 16) | (1 << 17);
-	set_dim_level(0);
+	set_dim_level(0, SOURCE_MANUAL);
 }
 
 // this is the interrupt handler that fires on an interrupt
@@ -63,13 +97,13 @@ void TIMER4_IRQHandler(void) {
 	//we want to ensure the triac is off
 	if (NRF_TIMER4->EVENTS_COMPARE[0]) {
 		NRF_TIMER4->EVENTS_COMPARE[0] = 0;
-		NRF_GPIO->OUTCLR = 1 << out_pin;
+		NRF_GPIO->OUTCLR = 1 << ac_out_pin;
 		NRF_TIMER4->TASKS_STOP = 1;
 		NRF_TIMER4->TASKS_CLEAR = 1;
 	//compare event 1 fires when we should turn the triac on
 	} else if (NRF_TIMER4->EVENTS_COMPARE[1]) {
 		NRF_TIMER4->EVENTS_COMPARE[1] = 0;
-		NRF_GPIO->OUTSET = 1 << out_pin;
+		NRF_GPIO->OUTSET = 1 << ac_out_pin;
 
 	}
 }
