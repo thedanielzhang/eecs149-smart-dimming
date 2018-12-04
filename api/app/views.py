@@ -9,6 +9,7 @@ from app.serializers import ScheduleSerializer, LightSerializer, ScanSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from bluepy.btle import Scanner, DefaultDelegate
+from app.apps import devices
 # Create your views here.
 
 @csrf_exempt
@@ -99,15 +100,26 @@ def schedule_specific(request, pk):
 def scan(request):
     # Get all scanned items
     scanner = Scanner().withDelegate(ScanDelegate())
-    devices = scanner.scan(10.0)
+    scanned_devices = scanner.scan(10.0)
 
-    for dev in devices:
+    for dev in scanned_devices:
         print("Device %s (%s), RSSI=%d dB" % (dev.addr, dev.addrType, dev.rssi))
         for (adtype, desc, value) in dev.getScanData():
             print("  %s = %s" % (desc, value))
 
     serializer = ScanSerializer(devices, many=True)
     return Response(serializer.data)
+
+@csrf_exempt
+@api_view(['GET'])
+def connect(request)
+    # Connect to saved lights
+    for light in Lights.objects.all():
+        if len(light.lightMAC) > 0:
+            device = btle.Peripheral(light.lightMAC, btle.ADDR_TYPE_RANDOM)
+            print(device.getServices())
+
+            devices.append(device)
 
 
 
