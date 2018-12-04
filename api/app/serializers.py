@@ -19,7 +19,7 @@ class LightSerializer(serializers.Serializer):
     name = serializers.CharField(required=False, allow_blank=True, max_length=100)
     lightSetting = serializers.IntegerField(required=False)
     scheduleId = serializers.IntegerField(required=False)
-    lightMAC = models.CharField(max_length=100, blank=True, default='')
+    lightMAC = serializers.CharField(max_length=100, allow_blank=True, default='')
 
 
     def create(self, validated_data):
