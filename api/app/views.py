@@ -115,14 +115,17 @@ def scan(request):
 @api_view(['GET'])
 def connect(request):
     # Connect to saved lights
+    connected_lights = []
     for light in Light.objects.all():
         if len(light.lightMAC) > 0:
             device = btle.Peripheral(light.lightMAC, btle.ADDR_TYPE_RANDOM)
             print(device.getServices())
 
             devices.append(device)
-
-    return HttpResponse(status=400)
+            connected_lights.append(light)
+    
+    serializer = LightSerializer(connected_lights, many=True)
+    return Response(serializer.data)
 
 
 class ScanDelegate(DefaultDelegate):
