@@ -1,6 +1,7 @@
 #include "ac-dimmer.h"
 #include <stdlib.h>
 #include "nrf.h"
+#include "light-sensor.h"
 
 static const uint32_t ac_out_pin = 2;
 static const uint32_t zc_int_pin = 5;
@@ -13,6 +14,13 @@ const uint8_t SOURCE_LIGHT_SENSOR = 0x2;
 const uint8_t SOURCE_MOTION = 0x4;
 
 static const uint8_t dim_increment = 5;
+
+static void dim_level_changed(uint8_t source) {
+	if (source != SOURCE_LIGHT_SENSOR) {
+		save_lux();
+	}
+	//update bluetooth with new data
+}
 
 //set a new dim level
 //dim_level is an 8-bit value, with 0 representing full brightness,
@@ -40,7 +48,7 @@ void set_dim_level(uint8_t dim_level, uint8_t source) {
 
 	current_dim_level = dim_level;
 	current_source = source;
-
+	dim_level_changed(source);
 	//start/restart timer to send new dim level
 }
 
