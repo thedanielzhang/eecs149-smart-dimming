@@ -10,6 +10,6 @@ class AppConfig(AppConfig):
     name = 'app'
     print("Connecting...")
     global devices
-    devices = []
+    devices = {}
 
         

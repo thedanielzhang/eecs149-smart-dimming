@@ -27,7 +27,6 @@ class LightSerializer(serializers.Serializer):
     
     def update(self, instance, validated_data):
         instance.name = validated_data.get('name', instance.name)
-        instance.lightSetting = validated_data.get('lightSetting', instance.lightSetting)
         instance.scheduleId = validated_data.get('scheduleId', instance.scheduleId)
         instance.lightMAC = validated_data.get('lightMAC', instance.lightMAC)
         instance.save()

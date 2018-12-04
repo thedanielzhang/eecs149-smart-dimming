@@ -124,7 +124,7 @@ def connect(request):
                 device = btle.Peripheral(light.lightMAC, btle.ADDR_TYPE_RANDOM)
                 print(device.getServices())
 
-                devices.append(device)
+                devices[light.id].append(device)
                 connected_lights.append(light)
             except:
                 print(light.name + " already connected, or can't connect")
