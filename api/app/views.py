@@ -42,10 +42,12 @@ def light_specific(request, pk):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
-        serializer = LightSerialier(light)
-        return Response(serializer.data)
+        serializer = LightSerializer(light)
+        serialized_data = serializer.data
+        serialized_data['lightSetting'] = 75
+        return Response(serialized_data)
     elif request.method == 'PUT':
-        serializer = LightSerialier(light, data=request.data)
+        serializer = LightSerializer(light, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -118,11 +120,14 @@ def connect(request):
     connected_lights = []
     for light in Light.objects.all():
         if len(light.lightMAC) > 0:
-            device = btle.Peripheral(light.lightMAC, btle.ADDR_TYPE_RANDOM)
-            print(device.getServices())
+            try:
+                device = btle.Peripheral(light.lightMAC, btle.ADDR_TYPE_RANDOM)
+                print(device.getServices())
 
-            devices.append(device)
-            connected_lights.append(light)
+                devices.append(device)
+                connected_lights.append(light)
+            except:
+                print(light.name + " already connected, or can't connect")
     
     serializer = LightSerializer(connected_lights, many=True)
     return Response(serializer.data)
