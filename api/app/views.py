@@ -122,7 +122,7 @@ def connect(request):
         if len(light.lightMAC) > 0:
             try:
                 device = btle.Peripheral(light.lightMAC, btle.ADDR_TYPE_RANDOM)
-                print(device.getServices())
+                print(device.getCharacteristics(uuid="0000BEEF1212EFDE1523785FEF13D123"))
 
                 devices[light.id] = device
                 connected_lights.append(light)
