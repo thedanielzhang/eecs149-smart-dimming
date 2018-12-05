@@ -14,6 +14,7 @@ const uint8_t SOURCE_LIGHT_SENSOR = 0x2;
 const uint8_t SOURCE_MOTION = 0x4;
 
 static const uint8_t dim_increment = 5;
+static const uint8_t dim_increment_light = 20;
 
 static void dim_level_changed(uint8_t source) {
 	if (source != SOURCE_LIGHT_SENSOR) {
@@ -26,6 +27,7 @@ static void dim_level_changed(uint8_t source) {
 //dim_level is an 8-bit value, with 0 representing full brightness,
 //and 255 representing full darkness
 void set_dim_level(uint8_t dim_level, uint8_t source) {
+	printf("source: %d \n", source);
 	//if full darkness or full brightness,
 	//just turn on or off the LED and disable all
 	//interrupts
@@ -47,6 +49,7 @@ void set_dim_level(uint8_t dim_level, uint8_t source) {
 	}
 
 	current_dim_level = dim_level;
+	printf("current_dim_level: %d \n", current_dim_level);
 	current_source = source;
 	dim_level_changed(source);
 	//start/restart timer to send new dim level
@@ -57,18 +60,30 @@ uint8_t get_dim_level(void) {
 }
 
 void more_dim(uint8_t source) {
+	//printf("more_dim: %d \n", source);
 	if (0xFF - current_dim_level < dim_increment) {
+		//printf("minned out \n");
 		set_dim_level(0xFF, source);
 	} else {
-		set_dim_level(current_dim_level + dim_increment, source);
+			if (source == SOURCE_LIGHT_SENSOR) {
+				set_dim_level(current_dim_level + dim_increment_light, source);
+			} else {
+				set_dim_level(current_dim_level + dim_increment, source);
+			}
+		}
 	}
-}
 
 void less_dim(uint8_t source) {
+	//printf("less_dim: %d \n", source);
 	if (current_dim_level < dim_increment) {
+		//printf("maxxed out \n");
 		set_dim_level(0, source);
 	} else {
-		set_dim_level(current_dim_level - dim_increment, source);
+		if (source == SOURCE_LIGHT_SENSOR) {
+			set_dim_level(current_dim_level - dim_increment_light, source);
+		} else {
+			set_dim_level(current_dim_level - dim_increment, source);
+		}
 	}
 }
 

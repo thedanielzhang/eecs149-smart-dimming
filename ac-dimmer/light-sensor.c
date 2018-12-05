@@ -17,6 +17,7 @@
 static float saved_lux;
 const uint8_t LIGHT_UP = 1;
 const uint8_t LIGHT_DOWN = 2;
+const float tol = 30;
 
 NRF_TWI_MNGR_DEF(twi_mngr_instance, 5, 0);
 
@@ -41,14 +42,17 @@ float poll_light_sensor(void){
 }
 
 void save_lux(void){
+  //nrf_delay_ms(500); //if the switch is located close to the light sensor
   saved_lux = poll_light_sensor();
+  printf("save_lux: %f \n",saved_lux);
 }
 
 uint8_t compare_light(void){
   float lux = poll_light_sensor();
-  if (lux < saved_lux){
+  printf("polled_lux: %f \n",lux);
+  if (lux < saved_lux - tol){
     return LIGHT_UP;
-  } else if (lux > saved_lux) {
+  } else if (lux > saved_lux + tol) {
     return LIGHT_DOWN;
   }
   return 0;

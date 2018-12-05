@@ -34,6 +34,7 @@ uint8_t get_motion_history(void) {
 }
 
 uint8_t poll_motion_detector(void) {
+	printf("motion: %i \n", ((NRF_GPIO->IN >> pir_pin) & 1));
 	motion_detected = (motion_detected << 1) | ((NRF_GPIO->IN >> pir_pin) & 1);
 	return motion_detected;
 }
