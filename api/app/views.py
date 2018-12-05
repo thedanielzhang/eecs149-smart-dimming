@@ -11,6 +11,7 @@ from rest_framework import status
 from bluepy.btle import Scanner, DefaultDelegate
 from bluepy import btle
 from app.apps import devices
+import struct
 # Create your views here.
 
 @csrf_exempt
@@ -44,7 +45,11 @@ def light_specific(request, pk):
     if request.method == 'GET':
         serializer = LightSerializer(light)
         serialized_data = serializer.data
-        serialized_data['lightSetting'] = 75
+        for character in devices[pk].getCharacteristics():
+            print(character.uuid)
+        print(devices[pk].getCharacteristics(uuid="0000beef-1212-efde-1523-785fef13d123"))
+        serialized_data['lightSetting'] = struct.unpack("I", bytearray(devices[pk].getCharacteristics(uuid="0000beef-1212-efde-1523-785fef13d123")[0].read()))
+        print(hex(serialized_data['lightSetting'][0]))
         return Response(serialized_data)
     elif request.method == 'PUT':
         serializer = LightSerializer(light, data=request.data)
