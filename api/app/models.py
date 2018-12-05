@@ -17,6 +17,7 @@ class Light(models.Model):
     name = models.CharField(max_length=100, blank=True, default='')
     scheduleId = models.IntegerField(default=-1) # This links Light to a Schedule - if negative, there is no associated schedule
     lightMAC = models.CharField(max_length=100, blank=True, default='')
+    lightSetting = models.IntegerField(default=0)
 
     class Meta:
         ordering = ('created',)

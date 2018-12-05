@@ -45,17 +45,16 @@ def light_specific(request, pk):
     if request.method == 'GET':
         serializer = LightSerializer(light)
         serialized_data = serializer.data
-        for character in devices[pk].getCharacteristics():
-            print(character.uuid)
-        print(devices[pk].getCharacteristics(uuid="0000beef-1212-efde-1523-785fef13d123"))
         serialized_data['lightSetting'] = struct.unpack("I", bytearray(devices[pk].getCharacteristics(uuid="0000beef-1212-efde-1523-785fef13d123")[0].read()))
         print(hex(serialized_data['lightSetting'][0]))
         return Response(serialized_data)
     elif request.method == 'PUT':
         serializer = LightSerializer(light, data=request.data)
         if serializer.is_valid():
+            data_as_bytes = serializer.validated_data['lightSetting'].to_bytes(8, byteorder='big')
+            devices[pk].getCharacteristics(uuid="0000beef-1212-efde-1523-785fef13d123")[0].write(data_as_bytes)
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.validated_data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     elif request.method == 'DELETE':
         light.delete()
