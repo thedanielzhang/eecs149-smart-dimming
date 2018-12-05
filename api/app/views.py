@@ -9,6 +9,8 @@ from app.serializers import ScheduleSerializer, LightSerializer, ScanSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from bluepy.btle import Scanner, DefaultDelegate
+from bluepy import btle
+from app.apps import devices
 # Create your views here.
 
 @csrf_exempt
@@ -40,10 +42,12 @@ def light_specific(request, pk):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
-        serializer = LightSerialier(light)
-        return Response(serializer.data)
+        serializer = LightSerializer(light)
+        serialized_data = serializer.data
+        serialized_data['lightSetting'] = 75
+        return Response(serialized_data)
     elif request.method == 'PUT':
-        serializer = LightSerialier(light, data=request.data)
+        serializer = LightSerializer(light, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -99,9 +103,9 @@ def schedule_specific(request, pk):
 def scan(request):
     # Get all scanned items
     scanner = Scanner().withDelegate(ScanDelegate())
-    devices = scanner.scan(10.0)
+    scanned_devices = scanner.scan(10.0)
 
-    for dev in devices:
+    for dev in scanned_devices:
         print("Device %s (%s), RSSI=%d dB" % (dev.addr, dev.addrType, dev.rssi))
         for (adtype, desc, value) in dev.getScanData():
             print("  %s = %s" % (desc, value))
@@ -109,7 +113,24 @@ def scan(request):
     serializer = ScanSerializer(devices, many=True)
     return Response(serializer.data)
 
+@csrf_exempt
+@api_view(['GET'])
+def connect(request):
+    # Connect to saved lights
+    connected_lights = []
+    for light in Light.objects.all():
+        if len(light.lightMAC) > 0:
+            try:
+                device = btle.Peripheral(light.lightMAC, btle.ADDR_TYPE_RANDOM)
+                print(device.getCharacteristics(uuid="0000BEEF1212EFDE1523785FEF13D123"))
 
+                devices[light.id] = device
+                connected_lights.append(light)
+            except:
+                print(light.name + " already connected, or can't connect")
+    
+    serializer = LightSerializer(connected_lights, many=True)
+    return Response(serializer.data)
 
 
 class ScanDelegate(DefaultDelegate):

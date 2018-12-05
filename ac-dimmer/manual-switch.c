@@ -3,7 +3,6 @@
 #include "nrf.h"
 #include "ac-dimmer.h"
 
-
 static const uint32_t switch_up_pin = 31;
 static const uint32_t switch_down_pin = 30;
 

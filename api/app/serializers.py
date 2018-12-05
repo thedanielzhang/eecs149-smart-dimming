@@ -17,7 +17,6 @@ class ScheduleSerializer(serializers.Serializer):
 class LightSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(required=False, allow_blank=True, max_length=100)
-    lightSetting = serializers.IntegerField(required=False)
     scheduleId = serializers.IntegerField(required=False)
     lightMAC = serializers.CharField(max_length=100, allow_blank=True, default='')
 
@@ -28,7 +27,6 @@ class LightSerializer(serializers.Serializer):
     
     def update(self, instance, validated_data):
         instance.name = validated_data.get('name', instance.name)
-        instance.lightSetting = validated_data.get('lightSetting', instance.lightSetting)
         instance.scheduleId = validated_data.get('scheduleId', instance.scheduleId)
         instance.lightMAC = validated_data.get('lightMAC', instance.lightMAC)
         instance.save()
