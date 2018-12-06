@@ -11,6 +11,7 @@ from rest_framework import status
 from bluepy.btle import Scanner, DefaultDelegate
 from bluepy import btle
 from app.apps import devices
+import struct
 # Create your views here.
 
 @csrf_exempt
@@ -44,13 +45,17 @@ def light_specific(request, pk):
     if request.method == 'GET':
         serializer = LightSerializer(light)
         serialized_data = serializer.data
-        serialized_data['lightSetting'] = 75
+        serialized_data['lightSetting'] = struct.unpack("I", bytearray(devices[pk].getCharacteristics(uuid="0000beef-1212-efde-1523-785fef13d123")[0].read()))
+        """serialized_data['lightSetting'] = bytearray(devices[pk].getCharacteristics(uuid="0000beef-1212-efde-1523-785fef13d123")[0].read())"""
+        print(list(devices[pk].getCharacteristics(uuid="0000beef-1212-efde-1523-785fef13d123")[0].read()))
         return Response(serialized_data)
     elif request.method == 'PUT':
         serializer = LightSerializer(light, data=request.data)
         if serializer.is_valid():
+            data_as_bytes = serializer.validated_data['lightSetting'].to_bytes(8, byteorder='big')
+            devices[pk].getCharacteristics(uuid="0000beef-1212-efde-1523-785fef13d123")[0].write(data_as_bytes)
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.validated_data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     elif request.method == 'DELETE':
         light.delete()
@@ -110,7 +115,7 @@ def scan(request):
         for (adtype, desc, value) in dev.getScanData():
             print("  %s = %s" % (desc, value))
 
-    serializer = ScanSerializer(devices, many=True)
+    serializer = ScanSerializer(scanned_devices, many=True)
     return Response(serializer.data)
 
 @csrf_exempt
@@ -131,6 +136,24 @@ def connect(request):
     
     serializer = LightSerializer(connected_lights, many=True)
     return Response(serializer.data)
+
+@csrf_exempt
+@api_view(['GET'])
+def connect_specific(request, pk):
+    try:
+        light = Lights.objects.get(pk=pk)
+    except Schedule.DoesNotExist:
+        return HttpResponse(status=404)
+    if len(light.lightMAC) > 0:
+        try:
+            device = btle.Peripheral(light.lightMAC, btle.ADDR_TYPE_RANDOM)
+            print(device.getCharacteristics(uuid="0000BEEF1212EFDE1523785FEF13D123"))
+
+            devices[light.id] = device
+        except:
+            print(light.name + " already connected, or can't connect")
+    serializer = LightSerializer(light)
+    return Response(serializer.data)    
 
 
 class ScanDelegate(DefaultDelegate):

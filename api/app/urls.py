@@ -7,5 +7,6 @@ urlpatterns = [
     path('schedules/', views.schedule_general),
     path('schedules/<int:pk>/', views.schedule_specific),
     path('scan/', views.scan),
-    path('connect/', views.connect)
+    path('connect/', views.connect),
+    path('connect/<int:pk>/', views.connect_specific)
 ]
