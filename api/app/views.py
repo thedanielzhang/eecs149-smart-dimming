@@ -52,7 +52,9 @@ def light_specific(request, pk):
     elif request.method == 'PUT':
         serializer = LightSerializer(light, data=request.data)
         if serializer.is_valid():
-            data_as_bytes = serializer.validated_data['lightSetting'].to_bytes(8, byteorder='big')
+            print(serializer.validated_data['lightSetting'])
+            data_as_bytes = serializer.validated_data['lightSetting'].to_bytes(4, byteorder='little')
+            print(data_as_bytes)
             devices[pk].getCharacteristics(uuid="0000beef-1212-efde-1523-785fef13d123")[0].write(data_as_bytes)
             serializer.save()
             return Response(serializer.validated_data)
@@ -141,7 +143,7 @@ def connect(request):
 @api_view(['GET'])
 def connect_specific(request, pk):
     try:
-        light = Lights.objects.get(pk=pk)
+        light = Light.objects.get(pk=pk)
     except Schedule.DoesNotExist:
         return HttpResponse(status=404)
     if len(light.lightMAC) > 0:
