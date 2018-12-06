@@ -7,6 +7,21 @@ class Schedule(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=100, blank=True, default='')
     # Activated field?
+    max_setting = models.ListTextField(
+        base_field=IntegerField()
+    )
+    min_setting = models.ListTextField(
+        base_field=IntegerField()
+    )
+    day_of_week = models.ListTextField(
+        base_field=CharField(max_length=10)
+    )
+    hour = models.ListTextField(
+        base_field=IntegerField()
+    )
+    minute = models.ListTextField(
+        base_field=IntegerField()
+    )
 
     class Meta:
         ordering = ('created',)
