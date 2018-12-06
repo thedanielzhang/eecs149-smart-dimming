@@ -1,5 +1,5 @@
 from django.db import models
-
+"""from django_mysql import models as django_models """
 # Create your models here.
 
 # Class representing schedule
@@ -7,21 +7,23 @@ class Schedule(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=100, blank=True, default='')
     # Activated field?
-    max_setting = models.ListTextField(
-        base_field=IntegerField()
+    """
+    max_setting = django_models.ListTextField(
+        base_field=models.IntegerField()
     )
-    min_setting = models.ListTextField(
-        base_field=IntegerField()
+    min_setting = django_models.ListTextField(
+        base_field=models.IntegerField()
     )
-    day_of_week = models.ListTextField(
-        base_field=CharField(max_length=10)
+    day_of_week = django_models.ListTextField(
+        base_field=models.CharField(max_length=10)
     )
-    hour = models.ListTextField(
-        base_field=IntegerField()
+    hour = django_models.ListTextField(
+        base_field=models.IntegerField()
     )
-    minute = models.ListTextField(
-        base_field=IntegerField()
+    minute = django_models.ListTextField(
+        base_field=models.IntegerField()
     )
+    """
 
     class Meta:
         ordering = ('created',)
