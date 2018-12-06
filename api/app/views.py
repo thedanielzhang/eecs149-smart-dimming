@@ -137,6 +137,24 @@ def connect(request):
     serializer = LightSerializer(connected_lights, many=True)
     return Response(serializer.data)
 
+@csrf_exempt
+@api_view(['GET'])
+def connect_specific(request, pk):
+    try:
+        light = Lights.objects.get(pk=pk)
+    except Schedule.DoesNotExist:
+        return HttpResponse(status=404)
+    if len(light.lightMAC) > 0:
+        try:
+            device = btle.Peripheral(light.lightMAC, btle.ADDR_TYPE_RANDOM)
+            print(device.getCharacteristics(uuid="0000BEEF1212EFDE1523785FEF13D123"))
+
+            devices[light.id] = device
+        except:
+            print(light.name + " already connected, or can't connect")
+    serializer = LightSerializer(light)
+    return Response(serializer.data)    
+
 
 class ScanDelegate(DefaultDelegate):
     def __init__(self):
