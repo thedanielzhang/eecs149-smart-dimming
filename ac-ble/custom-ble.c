@@ -30,6 +30,7 @@
 #include "nrf_log_default_backends.h"
 
 #include "our_service.h"
+#include "ac-dimmer.h"
 
 // Setting some parameters for the BLE Implementation 
 
@@ -70,7 +71,7 @@ static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;                        
 // instantiating the data structure for our service
 /////////ble_os_t m_our_service;
 
-ble_os_t lighting_service;
+static ble_os_t lighting_service;
 
 
 // Use UUIDs for service(s) used in your application.
@@ -277,6 +278,7 @@ void conn_params_init(void)
     APP_ERROR_CHECK(err_code);
 }
 
+/*
 // Function for putting the chip into sleep mode.
  static void sleep_mode_enter(void)
 {
@@ -293,23 +295,24 @@ void conn_params_init(void)
     err_code = sd_power_system_off();
     APP_ERROR_CHECK(err_code);
 }
-
+*/
 
 // Function for handling advertising events.
 static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
 {
-    ret_code_t err_code;
+    //ret_code_t err_code;
 
     switch (ble_adv_evt)
     {
         case BLE_ADV_EVT_FAST:
             NRF_LOG_INFO("Fast advertising.");
-            err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING);
-            APP_ERROR_CHECK(err_code);
+            //err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING);
+            //APP_ERROR_CHECK(err_code);
             break;
 
         case BLE_ADV_EVT_IDLE:
-            sleep_mode_enter();
+            NRF_LOG_INFO("Idle advertising.");
+            //sleep_mode_enter();
             break;
 
         default:
@@ -338,8 +341,8 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
 
         case BLE_GAP_EVT_CONNECTED:
             NRF_LOG_INFO("Connected.");
-            err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
-            APP_ERROR_CHECK(err_code);
+            //err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
+            //APP_ERROR_CHECK(err_code);
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
             err_code = nrf_ble_qwr_conn_handle_assign(&m_qwr, m_conn_handle);
             APP_ERROR_CHECK(err_code);
@@ -406,7 +409,7 @@ void ble_stack_init(void)
 
     //OUR_JOB: Step 3.C Call ble_our_service_on_ble_evt() to do housekeeping of ble connections related to our service and characteristics
 	
-    NRF_SDH_BLE_OBSERVER(lighting_service_observer, APP_BLE_OBSERVER_PRIO, ble_our_service_on_ble_evt, (void*) &lighting_service);	
+    NRF_SDH_BLE_OBSERVER(lighting_service_observer, APP_BLE_OBSERVER_PRIO, ble_our_service_on_ble_evt, &lighting_service);	
 		
 
 	
@@ -457,7 +460,7 @@ static void delete_bonds(void)
     APP_ERROR_CHECK(err_code);
 }
 
-
+/*
 //Function for handling events from the BSP module.
 static void bsp_event_handler(bsp_event_t event)
 {
@@ -493,7 +496,7 @@ static void bsp_event_handler(bsp_event_t event)
             break;
     }
 }
-
+*/
 
 //Function for initializing the Advertising functionality.
  
@@ -533,7 +536,7 @@ void advertising_init(void)
     ble_advertising_conn_cfg_tag_set(&m_advertising, APP_BLE_CONN_CFG_TAG);
 }
 
-
+/*
 // Function for initializing buttons and leds.
 void buttons_leds_init(bool * p_erase_bonds)
 {
@@ -548,16 +551,18 @@ void buttons_leds_init(bool * p_erase_bonds)
 
     *p_erase_bonds = (startup_event == BSP_EVENT_CLEAR_BONDING_DATA);
 }
+*/
 
-
+/*
 //Function for initializing power management.
 void power_management_init(void) {
     ret_code_t err_code;
     err_code = nrf_pwr_mgmt_init();
     APP_ERROR_CHECK(err_code);
 }
+*/
 
-
+/*
 //Function for handling the idle state (main loop).
 void idle_state_handle(void)
 {
@@ -566,7 +571,7 @@ void idle_state_handle(void)
         nrf_pwr_mgmt_run();
     }
 }
-
+*/
 
 //Function for starting advertising.
 
@@ -583,4 +588,8 @@ void advertising_start(bool erase_bonds)
 
         APP_ERROR_CHECK(err_code);
     }
+}
+
+void update_ble_characteristic(void) {
+    our_characteristic_update(&lighting_service, get_dim_level(), get_current_source());
 }

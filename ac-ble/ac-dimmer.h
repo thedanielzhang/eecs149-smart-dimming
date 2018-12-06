@@ -3,9 +3,12 @@
 
 #include <stdint.h>
 
+extern const uint8_t SOURCE_STARTUP;
 extern const uint8_t SOURCE_MANUAL;
 extern const uint8_t SOURCE_LIGHT_SENSOR;
 extern const uint8_t SOURCE_MOTION;
+extern const uint8_t SOURCE_APP_SLIDER;
+extern const uint8_t SOURCE_SCHEDULE;
 
 /*
  * set_dim_level controls how dim the light is
@@ -15,6 +18,7 @@ extern const uint8_t SOURCE_MOTION;
 void set_dim_level(uint8_t dim_level, uint8_t source);
 
 uint8_t get_dim_level(void);
+uint8_t get_current_source(void);
 
 void less_dim(uint8_t source);
 void more_dim(uint8_t source);

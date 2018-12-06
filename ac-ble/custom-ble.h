@@ -21,4 +21,6 @@ void advertising_start(bool erase_bonds);
 
 void idle_state_handle(void);
 
+void update_ble_characteristic(void);
+
 #endif
