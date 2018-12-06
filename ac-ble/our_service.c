@@ -5,6 +5,66 @@
 #include "our_service.h"
 #include "ble_srv_common.h"
 #include "app_error.h"
+#include "configuration.h"
+#include "ac-dimmer.h"
+
+static void on_write(ble_os_t * p_our_service, ble_evt_t const * p_ble_evt)
+{
+    ble_gatts_evt_write_t const * p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
+
+    // Custom Value Characteristic Written to.
+    if (p_evt_write->handle == p_our_service->char_handles.value_handle)
+    {
+        uint32_t char_data = *(p_evt_write->data);
+        printf("Characteristic written to. Value: 0x%lX (%ld)\n", char_data, char_data);
+
+        /* Char data:
+         * xxxccsssllllllll
+         *
+         * l = dim level bit
+         * s = source bit
+         * c = config bit
+         *     - lo bit = motion tracking
+         *     - hi bit = light tracking
+         * x = not used
+         *
+         */
+        uint8_t new_dim_level = char_data & 0xFF;
+        uint8_t source = (char_data >> 8) & 0x7;
+        if (new_dim_level != get_dim_level()) {
+          set_dim_level(new_dim_level, source);
+        }
+        motion_tracking_enabled = (char_data >> 11)  & 1;
+        light_tracking_enabled = (char_data >> 12) & 1;
+    }
+    /*
+    // Check if the Custom value CCCD is written to and that the value is the appropriate length, i.e 2 bytes.
+    if ((p_evt_write->handle == p_our_service->custom_value_handles.cccd_handle)
+        && (p_evt_write->len == 2)
+       )
+    {
+        // CCCD written, call application event handler
+        if (p_cus->evt_handler != NULL)
+        {
+            ble_cus_evt_t evt;
+
+            if (ble_srv_is_notification_enabled(p_evt_write->data))
+            {
+                printf("Notifications enabled\n");
+                evt.evt_type = BLE_CUS_EVT_NOTIFICATION_ENABLED;
+            }
+            else
+            {
+                printf("Notifications disabled\n");
+                evt.evt_type = BLE_CUS_EVT_NOTIFICATION_DISABLED;
+            }
+            // Call the application event handler.
+            p_cus->evt_handler(p_cus, &evt);
+        }
+    }
+    */
+
+}
 
 static void on_write(ble_os_t * p_our_service, ble_evt_t const * p_ble_evt)
 {
@@ -15,7 +75,7 @@ static void on_write(ble_os_t * p_our_service, ble_evt_t const * p_ble_evt)
     {
         uint16_t char_data = *p_evt_write->data;
         printf("Characteristic written to. Value: 0x%X\n", char_data);
-        
+
         /* Char data:
          * xxxccsssllllllll
          *
@@ -137,9 +197,9 @@ static uint32_t our_char_add(ble_os_t * p_our_service)
 
     attr_char_value.p_uuid      = &char_uuid;
     attr_char_value.p_attr_md   = &attr_md;
-    attr_char_value.max_len     = 2;
-    attr_char_value.init_len    = 2;
-    uint8_t value[4]            = {0x00/*light_level*/,0x00/*3 bits: cause; 2 bits: config*/};
+    attr_char_value.max_len     = 4;
+    attr_char_value.init_len    = 4;
+    uint8_t value[4]            = {0x00,0x00,0x00,0x00};
     attr_char_value.p_value     = value;
 
 
@@ -188,9 +248,8 @@ uint32_t our_characteristic_update(ble_os_t *p_our_service, uint16_t level, uint
   {
       return NRF_ERROR_NULL;
   }
-  bool motion_enabled = 1;
-  bool light_tracking_enabled = 1;
-  uint16_t char_value = (level & 0xFF) | (source << 8) | (motion_enabled << 11) | (light_tracking_enabled << 12);
+
+  uint32_t char_value = (level & 0xFF) | (source << 8) | (motion_tracking_enabled << 11) | (light_tracking_enabled << 12);
 
   uint32_t err_code = NRF_SUCCESS;
   ble_gatts_value_t gatts_value;
@@ -198,7 +257,7 @@ uint32_t our_characteristic_update(ble_os_t *p_our_service, uint16_t level, uint
   // Initialize value struct.
   memset(&gatts_value, 0, sizeof(gatts_value));
 
-  gatts_value.len     = 2;
+  gatts_value.len     = 4;
   gatts_value.offset  = 0;
   gatts_value.p_value = (uint8_t *)&char_value;
 
@@ -229,5 +288,4 @@ uint32_t our_characteristic_update(ble_os_t *p_our_service, uint16_t level, uint
     }
 
   return err_code;
-
 }

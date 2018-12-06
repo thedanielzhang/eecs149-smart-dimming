@@ -1,8 +1,8 @@
 #include "ac-dimmer.h"
 #include <stdlib.h>
 #include "nrf.h"
-#include "light-sensor.h"
 #include "nrf_drv_gpiote.h"
+#include "tasks.h"
 
 static const uint32_t ac_out_pin = 2;
 static const uint32_t zc_int_pin = 5;
@@ -10,18 +10,14 @@ static const uint32_t zc_int_pin = 5;
 static uint8_t current_dim_level;
 static uint8_t current_source;
 
+const uint8_t SOURCE_STARTUP = 0x0;
 const uint8_t SOURCE_MANUAL = 0x1;
 const uint8_t SOURCE_LIGHT_SENSOR = 0x2;
 const uint8_t SOURCE_MOTION = 0x4;
+const uint8_t SOURCE_APP_SLIDER = 0x5;
+const uint8_t SOURCE_SCHEDULE = 0x3;
 
 static const uint8_t dim_increment = 5;
-
-static void dim_level_changed(uint8_t source) {
-	if (source != SOURCE_LIGHT_SENSOR) {
-		save_lux();
-	}
-	//update bluetooth with new data
-}
 
 //set a new dim level
 //dim_level is an 8-bit value, with 0 representing full brightness,
@@ -49,12 +45,16 @@ void set_dim_level(uint8_t dim_level, uint8_t source) {
 
 	current_dim_level = dim_level;
 	current_source = source;
-	dim_level_changed(source);
-	//start/restart timer to send new dim level
+	
+	start_light_changed_timer();
 }
 
 uint8_t get_dim_level(void) {
 	return current_dim_level;
+}
+
+uint8_t get_current_source(void) {
+	return current_source;
 }
 
 void more_dim(uint8_t source) {
@@ -109,7 +109,7 @@ void setup_dimmer(void) {
 	NRF_TIMER4->CC[0] = 255;
 	NRF_TIMER4->CC[1] = 250;
 	NRF_TIMER4->INTENSET = (1 << 16) | (1 << 17);
-	set_dim_level(0, SOURCE_MANUAL);
+	set_dim_level(0, SOURCE_STARTUP);
 }
 
 // This is the interrupt handler that fires on a compare event

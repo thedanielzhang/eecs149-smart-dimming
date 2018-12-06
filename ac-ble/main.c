@@ -13,6 +13,7 @@
 #include "tasks.h"
 #include "light-sensor.h"
 #include "custom-ble.h"
+#include "configuration.h"
 
 
 static void log_init(void)
@@ -33,12 +34,12 @@ int main(void)
     setup_manual_switch();
     setup_light_sensor();
 
-    bool erase_bonds;
+    bool erase_bonds = false;
 
     // Initialize.
     log_init();
-    buttons_leds_init(&erase_bonds);
-    power_management_init();
+    //buttons_leds_init(&erase_bonds);
+    //power_management_init();
     ble_stack_init();
     gap_params_init();
     gatt_init();
@@ -49,16 +50,24 @@ int main(void)
     conn_params_init();
     peer_manager_init();
 
-    // Start execution.
-    NRF_LOG_INFO("Buckler started.");
-
-    start_timers();
+    start_repeating_timers();
 
     advertising_start(erase_bonds);
 
     // Enter main loop.
-    for (;;)
-    {
+    while (1) {
+        if (light_level_changed) {
+            light_level_changed = false;
+            uint8_t source = get_current_source();
+            if (source != SOURCE_LIGHT_SENSOR) {
+                save_lux();
+            }
+            //if it was not changed over bluetooth
+            if (source != SOURCE_APP_SLIDER && source != SOURCE_SCHEDULE) {
+                update_ble_characteristic();
+            }
+        }
+
         uint8_t motion_history = 0;
         if (should_check_motion) {
             should_check_motion = false;
@@ -72,8 +81,7 @@ int main(void)
         }
 
         uint8_t light_state = 0;
-        bool config_light = true;
-        if (config_light && should_check_light) {
+        if (should_check_light) {
             should_check_light = false;
             light_state = compare_light();
         }
@@ -84,16 +92,16 @@ int main(void)
             } else {
                 more_dim(SOURCE_MANUAL);
             }
-        } else if (light_state) {
+        } else if (motion_tracking_enabled && get_dim_level() == 0xFF && !get_last_switch_state() && (motion_history) == 0xFF) {
+            //turn on
+            set_dim_level(0, SOURCE_MOTION);
+            restart_motion_timer();
+        } else if (light_tracking_enabled && light_state) {
             if (light_state == LIGHT_UP) {
                 less_dim(SOURCE_LIGHT_SENSOR);
             } else if (light_state == LIGHT_DOWN) {
                 more_dim(SOURCE_LIGHT_SENSOR);
             }
-        } else if (!get_last_switch_state() && (motion_history & 0x7) == 0x7) {
-            //turn on
-            set_dim_level(0, SOURCE_MOTION);
-            restart_motion_timer();
         }
     }
 }
