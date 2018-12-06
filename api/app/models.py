@@ -7,6 +7,12 @@ class Schedule(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=100, blank=True, default='')
     # Activated field?
+    max_setting = models.IntegerField(default=0)
+    min_setting = models.IntegerField(default=0)
+    day_of_week = models.CharField(max_length=100, blank=True, default='')
+    hour = models.IntegerField(default=0)
+    minute = models.IntegerField(default=0)
+    schedule_id = models.IntegerField(default=0)
     """
     max_setting = django_models.ListTextField(
         base_field=models.IntegerField()
