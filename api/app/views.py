@@ -120,6 +120,20 @@ def scan(request):
     serializer = ScanSerializer(scanned_devices, many=True)
     return Response(serializer.data)
 
+@crsf_exempt
+@api_view(['POST'])
+def create_schedule(request, pk):
+    """ pk is light id """
+    data = JSONParser().parse(request)
+    serializer = ScheduleSerializer(data=data, many=True)
+    if serializer.is_valid():
+
+        serializer.save()
+        return JsonResponse(serializer.data, status=201)
+    return JsonResponse(serializer.errors, status=400)
+
+
+
 @csrf_exempt
 @api_view(['GET'])
 def connect(request):
