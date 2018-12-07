@@ -2,7 +2,7 @@ $(function() {
     //we will probably actually use django templating for this
     let searchParams = new URLSearchParams(window.location.search);
     let light = searchParams.has('light') ? searchParams.get('light') : 0;
-
+    let light_url = '/lights/' + light + '/';
     /*
     var socket = new WebSocket("ws://www.example.com/socketserver");
 
@@ -17,21 +17,20 @@ $(function() {
         console.log(new_dim_level);
         //socket.send(JSON.stringify({"dim_level":new_dim_level}));
         $.ajax({
-            url: '/lights/'+light,
+            url: light_url,
             type: 'PUT',
             contentType: 'application/json',
-            data: JSON.stringify({"dim_level": new_dim_level})
+            data: JSON.stringify({"lightSetting": new_dim_level})
         });
     }
 
     var slider = $('#light-slide').slider().on('slide', slider_changed).data('slider')
-    let light_url = '/lights/'+light'/'
 
     $.get(light_url, function(info) {
         //console.log(data)
         //let info = JSON.parse(data);
         if ("lightSetting" in info) {
-            let new_level = 255 - info["lightSetting"][0];
+            let new_level = 255 - (info["lightSetting"][0] & 0xFF);
             slider.setValue(new_level, false, false);
         }
         if ("light_tracking_enabled" in info && info["light_tracking_enabled"]) {
