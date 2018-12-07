@@ -25,8 +25,9 @@ $(function() {
     }
 
     var slider = $('#light-slide').slider().on('slide', slider_changed).data('slider')
+    let light_url = '/lights/'+light'/'
 
-    $.get('/lights/'+light, function(info) {
+    $.get(light_url, function(info) {
         //console.log(data)
         //let info = JSON.parse(data);
         if ("lightSetting" in info) {
@@ -46,7 +47,7 @@ $(function() {
     $('input#ambient-tracking-check').change(function() {
         let light_tracking_enabled = ($('input#ambient-tracking-check').is(':checked'));
         $.ajax({
-            url: '/lights/'+light,
+            url: light_url,
             type: 'PUT',
             contentType: 'application/json',
             data: JSON.stringify({"light_tracking_enabled": light_tracking_enabled})
@@ -56,7 +57,7 @@ $(function() {
     $('input#motion-tracking-check').change(function() {
         let motion_tracking_enabled = ($('input#motion-tracking-check').is(':checked'));
         $.ajax({
-            url: '/lights/'+light,
+            url: light_url,
             type: 'PUT',
             contentType: 'application/json',
             data: JSON.stringify({"light_tracking_enabled": light_tracking_enabled})
