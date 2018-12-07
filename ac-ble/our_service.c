@@ -66,62 +66,6 @@ static void on_write(ble_os_t * p_our_service, ble_evt_t const * p_ble_evt)
 
 }
 
-static void on_write(ble_os_t * p_our_service, ble_evt_t const * p_ble_evt)
-{
-    ble_gatts_evt_write_t const * p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
-
-    // Custom Value Characteristic Written to.
-    if (p_evt_write->handle == p_our_service->char_handles.value_handle)
-    {
-        uint16_t char_data = *p_evt_write->data;
-        printf("Characteristic written to. Value: 0x%X\n", char_data);
-
-        /* Char data:
-         * xxxccsssllllllll
-         *
-         * l = light level bit
-         * s = source bit
-         * c = config bit
-         *     - lo bit = motion tracking
-         *     - hi bit = light tracking
-         * x = not used
-         *
-         */
-        //uint8_t new_light_level = char_data & 0xFF;
-        //uint8_t source = (char_data >> 8) & 0x7;
-        //bool motion_enabled = (char_data >> 11)  & 1;
-        //bool light_tracking_enabled = (char_data >> 12) & 1;
-        //do what we will...
-    }
-    /*
-    // Check if the Custom value CCCD is written to and that the value is the appropriate length, i.e 2 bytes.
-    if ((p_evt_write->handle == p_our_service->custom_value_handles.cccd_handle)
-        && (p_evt_write->len == 2)
-       )
-    {
-        // CCCD written, call application event handler
-        if (p_cus->evt_handler != NULL)
-        {
-            ble_cus_evt_t evt;
-
-            if (ble_srv_is_notification_enabled(p_evt_write->data))
-            {
-                printf("Notifications enabled\n");
-                evt.evt_type = BLE_CUS_EVT_NOTIFICATION_ENABLED;
-            }
-            else
-            {
-                printf("Notifications disabled\n");
-                evt.evt_type = BLE_CUS_EVT_NOTIFICATION_DISABLED;
-            }
-            // Call the application event handler.
-            p_cus->evt_handler(p_cus, &evt);
-        }
-    }
-    */
-
-}
-
 void ble_our_service_on_ble_evt(ble_evt_t const * p_ble_evt, void * p_context)
 {
   	ble_os_t * p_our_service =(ble_os_t *) p_context;
