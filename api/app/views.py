@@ -11,8 +11,13 @@ from rest_framework import status
 from bluepy.btle import Scanner, DefaultDelegate
 from bluepy import btle
 from app.apps import devices
+from crontab import CronTab
 import struct
+
 # Create your views here.
+
+def dashboard(request):
+    return render(request, 'dashboard/index.html', {})
 
 @csrf_exempt
 @api_view(['GET', 'POST'])
@@ -120,14 +125,17 @@ def scan(request):
     serializer = ScanSerializer(scanned_devices, many=True)
     return Response(serializer.data)
 
-@crsf_exempt
+@csrf_exempt
 @api_view(['POST'])
 def create_schedule(request, pk):
     """ pk is light id """
     data = JSONParser().parse(request)
     serializer = ScheduleSerializer(data=data, many=True)
     if serializer.is_valid():
-
+        cron = CronTab()
+        for event in serializer.data:
+            job = cron.new(command='my command', comment=str(pk))
+            job.dow.on(event['day_of_week']).hour.on(event['hour']).minute.on(event['minute'])
         serializer.save()
         return JsonResponse(serializer.data, status=201)
     return JsonResponse(serializer.errors, status=400)

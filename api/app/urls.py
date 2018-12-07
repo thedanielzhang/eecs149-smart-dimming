@@ -8,5 +8,6 @@ urlpatterns = [
     path('schedules/<int:pk>/', views.schedule_specific),
     path('scan/', views.scan),
     path('connect/', views.connect),
-    path('connect/<int:pk>/', views.connect_specific)
+    path('connect/<int:pk>/', views.connect_specific),
+    path('dashboard/', views.dashboard)
 ]
