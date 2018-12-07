@@ -1,2 +1,6 @@
 ac-dimmer/_build
 ac-dimmer/_build/*
+._*
+**/._*
+.DS_Store
+**/.DS_Store

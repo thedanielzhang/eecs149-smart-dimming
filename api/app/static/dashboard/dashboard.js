@@ -11,6 +11,19 @@ $(function() {
     }
     */
 
+    var slider_changed = function() {
+        var new_dim_level = 255 - slider.getValue();
+        //send it over bluetooth
+        console.log(new_dim_level);
+        //socket.send(JSON.stringify({"dim_level":new_dim_level}));
+        $.ajax({
+            url: '/lights/'+light,
+            type: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify({"dim_level": new_dim_level})
+        });
+    }
+
     var slider = $('#light-slide').slider().on('slide', slider_changed).data('slider')
 
     $.get('/lights/'+light, function(info) {
@@ -27,19 +40,6 @@ $(function() {
             //check the box
         }
     });
-
-    var slider_changed = function() {
-        var new_dim_level = 255 - slider.getValue();
-        //send it over bluetooth
-        console.log(new_dim_level);
-        //socket.send(JSON.stringify({"dim_level":new_dim_level}));
-        $.ajax({
-            url: '/lights/'+light,
-            type: 'PUT',
-            contentType: 'application/json',
-            data: JSON.stringify({"dim_level": new_dim_level})
-        });
-    }
 
     //slider.on('slide', slider_changed);
 
