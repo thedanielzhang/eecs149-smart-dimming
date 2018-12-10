@@ -13,11 +13,44 @@ from bluepy import btle
 from app.apps import devices
 from crontab import CronTab
 import struct
+import sqlite3
+from django.conf import settings
+import os
+
+light_db = os.path.join(settings.BASE_DIR, 'lights.db')
 
 # Create your views here.
-
+@api_view(['GET'])
 def dashboard(request):
-    return render(request, 'dashboard/index.html', {})
+    id = int(request.GET.get('id', 0))
+    mac = request.GET.get('mac', False)
+    conn = sqlite3.connect(light_db)
+    c = conn.cursor()
+    configured_lights = []
+    for (name, id, connected) in c.execute("SELECT name, id, connected FROM lights WHERE name IS NOT NULL ORDER BY id ASC"):
+        configured_lights.append({'name':name,'id':id,'connected':connected==1})
+    unconfigured_lights = []
+    for (mac, connected) in c.execute("SELECT mac, connected FROM lights WHERE name IS NULL"):
+        unconfigured_lights.append({'mac':mac,'connected':connected==1})
+    c.execute("SELECT char_value, connected, name FROM lights WHERE id = ?", (id,))
+    current_light = {}
+    entry = c.fetchone()
+    char_value = entry[0]
+    if entry and char_value and not mac:
+        current_light['light_level'] = 255 - (char_value & 0xFF)
+        current_light['source'] = (char_value >> 8) & 0x7
+        current_light['light_tracking'] = ((char_value >> 11) & 1) == 1
+        current_light['motion_tracking'] = ((char_value >> 12) & 1) == 1
+        current_light['connected'] = entry[1] == 1
+    return render(request, 'dashboard/index.html', {'configured':configured_lights, 'unconfigured':unconfigured_lights, 'current_light': current_light, 'mac':mac})
+
+@api_view(['POST'])
+def configure_light(request):
+    conn = sqlite3.connect(light_db)
+    c = conn.cursor()
+    c.execute("UPDATE lights SET name = ?1, id = ?2 WHERE mac = ?3", (request.data['name'], request.data['id'], request.data['mac']))
+    conn.commit()
+    return HttpResponse(status=201)
 
 @csrf_exempt
 @api_view(['GET', 'POST'])
@@ -37,7 +70,7 @@ def light_general(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@csrf_exempt 
+@csrf_exempt
 @api_view(['GET', 'PUT', 'DELETE'])
 def light_specific(request, pk):
     # GET, UPDATE, and DELETE specific light
@@ -86,7 +119,7 @@ def schedule_general(request):
             return JsonResponse(serializer.data, status=201)
         return JsonResponse(serializer.errors, status=400)
 
-@csrf_exempt 
+@csrf_exempt
 @api_view(['GET', 'PUT', 'DELETE'])
 def schedule_specific(request, pk):
     # GET, UPDATE, and DELETE specific light
@@ -157,7 +190,7 @@ def connect(request):
                 connected_lights.append(light)
             except:
                 print(light.name + " already connected, or can't connect")
-    
+
     serializer = LightSerializer(connected_lights, many=True)
     return Response(serializer.data)
 
@@ -177,7 +210,7 @@ def connect_specific(request, pk):
         except:
             print(light.name + " already connected, or can't connect")
     serializer = LightSerializer(light)
-    return Response(serializer.data)    
+    return Response(serializer.data)
 
 
 class ScanDelegate(DefaultDelegate):
