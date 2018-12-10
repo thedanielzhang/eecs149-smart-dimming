@@ -1,5 +1,4 @@
 $(function() {
-    //we will probably actually use django templating for this
     let searchParams = new URLSearchParams(window.location.search);
     if (searchParams.has('mac')) {
         let mac = searchParams.get('mac');
@@ -48,7 +47,9 @@ $(function() {
             console.log(new_dim_level);
             socket.send(JSON.stringify({"dim_level":new_dim_level}));
         }
+
         $('#light-'+light).addClass('active');
+
         if ($('#light-slide').length) {
             var slider = $('#light-slide').slider().on('slide', slider_changed).data('slider')
         }

@@ -32,13 +32,13 @@
 #include "our_service.h"
 #include "ac-dimmer.h"
 
-// Setting some parameters for the BLE Implementation 
+// Setting some parameters for the BLE Implementation
 
-#define DEVICE_NAME                     "Light 1"   // Device name
+#define DEVICE_NAME                     "Light 2"   // Device name
 #define MANUFACTURER_NAME               "Nordic"    // manufacturer name
-#define APP_ADV_INTERVAL                300         // The advertising interval 
+#define APP_ADV_INTERVAL                300         // The advertising interval
 #define APP_ADV_DURATION                18000       // The advertising duration (180 seconds)
-#define APP_BLE_OBSERVER_PRIO           3           // BLE observer priority. 
+#define APP_BLE_OBSERVER_PRIO           3           // BLE observer priority.
 #define APP_BLE_CONN_CFG_TAG            1           // SoftDevice BLE configuration
 
 #define MIN_CONN_INTERVAL               MSEC_TO_UNITS(100, UNIT_1_25_MS)        // Minimum acceptable connection interval (0.1 seconds)
@@ -53,16 +53,16 @@
 //Security Parameters
 #define SEC_PARAM_BOND                  1                                       // Perform bonding.
 #define SEC_PARAM_MITM                  0                                       // Man In The Middle protection not required.
-#define SEC_PARAM_LESC                  0                                       // LE Secure Connections not enabled. 
+#define SEC_PARAM_LESC                  0                                       // LE Secure Connections not enabled.
 #define SEC_PARAM_KEYPRESS              0                                       // Keypress notifications not enabled.
 #define SEC_PARAM_IO_CAPABILITIES       BLE_GAP_IO_CAPS_NONE                    //No I/O capabilities.
-#define SEC_PARAM_OOB                   0                                       //Out Of Band data not available. 
-#define SEC_PARAM_MIN_KEY_SIZE          7                                       // Minimum encryption key size. 
-#define SEC_PARAM_MAX_KEY_SIZE          16                                      // Maximum encryption key size. 
+#define SEC_PARAM_OOB                   0                                       //Out Of Band data not available.
+#define SEC_PARAM_MIN_KEY_SIZE          7                                       // Minimum encryption key size.
+#define SEC_PARAM_MAX_KEY_SIZE          16                                      // Maximum encryption key size.
 
 #define DEAD_BEEF                       0xDEADBEEF                              //Value used as error code on stack dump, can be used to identify stack location on stack unwind.
 
-NRF_BLE_GATT_DEF(m_gatt);                                                       // GATT module instance. 
+NRF_BLE_GATT_DEF(m_gatt);                                                       // GATT module instance.
 NRF_BLE_QWR_DEF(m_qwr);                                                         // Context for the Queued Write module.
 BLE_ADVERTISING_DEF(m_advertising);                                             // Advertising module instance.
 
@@ -82,7 +82,7 @@ static ble_uuid_t m_adv_uuids[] =                                               
 
 
 //Callback function for asserts in the SoftDevice.
- 
+
 void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
 {
     app_error_handler(DEAD_BEEF, line_num, p_file_name);
@@ -90,7 +90,7 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
 
 
 //Function for handling Peer Manager events.
- 
+
 static void pm_evt_handler(pm_evt_t const * p_evt)
 {
     ret_code_t err_code;
@@ -112,7 +112,7 @@ static void pm_evt_handler(pm_evt_t const * p_evt)
 
         case PM_EVT_CONN_SEC_FAILED:
         {
-           
+
         } break;
 
         case PM_EVT_CONN_SEC_CONFIG_REQ:
@@ -179,7 +179,7 @@ static void pm_evt_handler(pm_evt_t const * p_evt)
 }
 
 //Function for the GAP initialization.
- 
+
 void gap_params_init(void)
 {
     ret_code_t              err_code;
@@ -219,7 +219,7 @@ static void nrf_qwr_error_handler(uint32_t nrf_error)
     APP_ERROR_HANDLER(nrf_error);
 }
 
-//Function for initializing services that will be used by the application. 
+//Function for initializing services that will be used by the application.
 void services_init(void)
 {
 	uint32_t         err_code;
@@ -311,8 +311,8 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
             break;
 
         case BLE_ADV_EVT_IDLE:
-            NRF_LOG_INFO("Idle advertising.");
-            //sleep_mode_enter();
+            NRF_LOG_INFO("Entering Idle State...Do Fast Adv. Instead");
+            advertising_start(false);
             break;
 
         default:
@@ -328,14 +328,14 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
 static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
 {
     ret_code_t err_code = NRF_SUCCESS;
-		
+
 
     switch (p_ble_evt->header.evt_id)
     {
         case BLE_GAP_EVT_DISCONNECTED:
             NRF_LOG_INFO("Disconnected.");
             // LED indication will be changed when advertising starts.
- 
+
 
             break;
 
@@ -382,7 +382,7 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
             break;
     }
 
-		
+
 }
 
 
@@ -408,11 +408,11 @@ void ble_stack_init(void)
     NRF_SDH_BLE_OBSERVER(m_ble_observer, APP_BLE_OBSERVER_PRIO, ble_evt_handler, NULL);
 
     //OUR_JOB: Step 3.C Call ble_our_service_on_ble_evt() to do housekeeping of ble connections related to our service and characteristics
-	
-    NRF_SDH_BLE_OBSERVER(lighting_service_observer, APP_BLE_OBSERVER_PRIO, ble_our_service_on_ble_evt, &lighting_service);	
-		
 
-	
+    NRF_SDH_BLE_OBSERVER(lighting_service_observer, APP_BLE_OBSERVER_PRIO, ble_our_service_on_ble_evt, &lighting_service);
+
+
+
 }
 
 
@@ -499,7 +499,7 @@ static void bsp_event_handler(bsp_event_t event)
 */
 
 //Function for initializing the Advertising functionality.
- 
+
 void advertising_init(void)
 {
     ret_code_t             err_code;
@@ -514,16 +514,16 @@ void advertising_init(void)
     manuf_data.data.p_data                    = data;
     manuf_data.data.size                      = sizeof(data);
     init.advdata.p_manuf_specific_data = &manuf_data;
-    
+
     init.advdata.name_type               = BLE_ADVDATA_FULL_NAME;
     init.advdata.include_appearance      = true;
     init.advdata.flags                   = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
 
-	
+
 		init.srdata.uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
 		init.srdata.uuids_complete.p_uuids = m_adv_uuids;
-		
-	
+
+
     init.config.ble_adv_fast_enabled  = true;
     init.config.ble_adv_fast_interval = APP_ADV_INTERVAL;
     init.config.ble_adv_fast_timeout  = APP_ADV_DURATION;
