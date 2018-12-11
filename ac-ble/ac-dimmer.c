@@ -23,6 +23,7 @@ static const uint8_t dim_increment = 5;
 //dim_level is an 8-bit value, with 0 representing full brightness,
 //and 255 representing full darkness
 void set_dim_level(uint8_t dim_level, uint8_t source) {
+	//printf("dim_level: %d, source: %d \n", dim_level,source);
 	//if full darkness or full brightness,
 	//just turn on or off the LED and disable all
 	//interrupts
@@ -45,7 +46,7 @@ void set_dim_level(uint8_t dim_level, uint8_t source) {
 
 	current_dim_level = dim_level;
 	current_source = source;
-	
+
 	start_light_changed_timer();
 }
 
@@ -94,7 +95,7 @@ void setup_dimmer(void) {
 	if(nrf_drv_gpiote_is_init() == false)
 	{
     	err_code = nrf_drv_gpiote_init();
-    	APP_ERROR_CHECK(err_code);  
+    	APP_ERROR_CHECK(err_code);
 	}
 
 	nrf_drv_gpiote_in_config_t zc_config = GPIOTE_CONFIG_IN_SENSE_LOTOHI(true);
