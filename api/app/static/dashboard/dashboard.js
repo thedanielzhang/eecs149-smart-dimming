@@ -77,26 +77,111 @@ $(function() {
         });
 
         scheduler.config.day_date = "%l";
+        scheduler.config.details_on_create = true;
+        var days_of_week = ["SUN", "MON", "TUES", "WED", "THURS", "FRI", "SAT"];
         scheduler.init('scheduler_here', new Date(0),"week");
+        scheduler.attachEvent('onBeforeLightBox', function(id) {
+            console.log('event created')
+            var ev = scheduler.getEvent(id);
+            ev.text = "Min: 0%\nMax: 100%";
+            return true;
+        });
+        var upload_event = function(ev) {
+            var start_day = days_of_week[ev.start_date.getDay()];
+            var start_hour = ev.start_date.getHours();
+            var start_min = ev.start_date.getMinutes();
+            var min_regex = /Min:\s*\d+/;
+            var min_matches = ev.text.match(min_regex);
+            var min = 0;
+            if (min_matches == undefined || min_matches.length == 0) {
+                console.log("bad min format!");
+            } else {
+                min = parseInt(min_matches[0].substring(4));
+            }
+
+            var max_regex = /Max:\s*\d+/;
+            var max_matches = ev.text.match(max_regex);
+            var max = 0;
+            if (max_matches == undefined || max_matches.length == 0) {
+                console.log("bad min format!");
+            } else {
+                max = parseInt(max_matches[0].substring(4));
+            }
+
+            var end_day = days_of_week[ev.end_date.getDay()];
+            var end_hour = ev.end_date.getHours()
+            var end_min = ev.end_date.getMinutes()
+            let new_id = light + ':' + start_day + ':' + start_hour + ':' + start_min + '-' + end_day + ':' + end_hour + ':' + end_min
+            scheduler.changeEventId(ev.id, new_id);
+            var start = {
+                "max_setting": max,
+                "min_setting": min,
+                "day": start_day,
+                "hour": start_hour,
+                "minute": start_min,
+                "schedule_id": light + ':' + start_day + ':' + start_hour + ':' + start_min + '-' + end_day + ':' + end_hour + ':' + end_min
+            };
+
+            var end = {
+                "max_setting": -1,
+                "min_setting": -1,
+                "day": end_day,
+                "hour": end_hour,
+                "minute": end_min,
+                "schedule_id": light + ':' + start_day + ':' + start_hour + ':' + start_min + '-' + end_day + ':' + end_hour + ':' + end_min
+            }
+            console.log(start);
+            console.log(end);
+            $.ajax({
+                type: "POST",
+                url: '/create/' + light + '/',
+                data: [start, end],
+                contentType: "application/json",
+                success: function(data, textStatus, jqXHR){console.log("sent calendar")},
+                dataType: "json"
+            });
+        }
         scheduler.attachEvent('onEventAdded', function(id, ev) {
             console.log("new event!");
             console.log(ev);
+            upload_event(ev);
+
         });
+        var delete_event = function(id) {
+            console.log('deleting event');
+            console.log(id)
+            $.ajax({
+                type: "DELETE",
+                url: '/delete/' + id + '/',
+                dataType: 'json',
+                success: function(data, textStatus, jqXHR) { console.log("deleted a calendar")}
+            });
+        }
         scheduler.attachEvent('onEventChanged', function(id, ev) {
             console.log("event changed");
             console.log(ev);
+            delete_event(id);
+            upload_event(ev);
         });
         scheduler.attachEvent('onEventDeleted', function(id, ev) {
             console.log("event deleted");
             console.log(ev);
+            delete_event(id);
         });
+        $.ajax({
+            type: "GET",
+            url: '/schedule/' + light + '/',
+            dataType: 'json',
+            success: function(data, textStatus, jqXHR) {
+                var events = [];
+                data.forEach(function(event) {
+                    event["id"] = event["schedule_id"];
+                    events.push(event);
+                });
 
-        let events = [
-            {id:1, text:"Min: 20%\nMax: 80%", start_date:"12/29/1969 14:00",end_date:"12/29/1969 17:00"},
-            {id:2, text:"Min: 0%\nMax: 20%", start_date:"12/29/1969 22:00",end_date:"12/30/1969 06:00"},
-            {id:3, text:"Min: 20%\nMax: 80%", start_date:"01/01/1970 14:00",end_date:"01/01/1970 17:00"},
-        ]/*{{ events|safe }}*/;
-        scheduler.parse(events, "json");
+                scheduler.parse(events, "json");
+            }
+        });
     }
 
 });
