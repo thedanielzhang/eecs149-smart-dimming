@@ -23,7 +23,7 @@ light_db = os.path.join(settings.BASE_DIR, 'lights.db')
 @api_view(['GET'])
 def dashboard(request):
     id = int(request.GET.get('id', 0))
-    mac = request.GET.get('mac', False)
+    mac = request.GET.get('mac')
     conn = sqlite3.connect(light_db)
     c = conn.cursor()
     configured_lights = []
@@ -56,7 +56,6 @@ def configure_light(request):
 @api_view(['GET', 'POST'])
 def light_general(request):
     # GET all and POST methods
-    
     if request.method == 'GET':
         lights = Light.objects.all()
         serializer = LightSerializer(lights, many=True)
@@ -205,6 +204,9 @@ def scan(request):
 @api_view(['POST'])
 def create_schedule(request, pk):
     """ pk is light id """
+
+    print("We are in create_schedule")
+    print(request)
     data = JSONParser().parse(request)
     print("We are in create_schedule")
     serializer = ScheduleSerializer(data=data, many=True)
@@ -215,7 +217,7 @@ def create_schedule(request, pk):
         print(serializer.data)
         for event in serializer.data:
             
-            job = cron.new(command='my command', comment=event.get('schedule_id'))
+            job = cron.new(command='python3 /home/pi/eecs149-smart-dimming/write_schedule.py --id=%d --min=%d --max=%d' % (event.get('light_id'), data.get('min_setting'), data.get('max_setting')), comment=event.get('schedule_id'))
             job.dow.on(event.get('day_of_week'))
             
             job.hour.on(event.get('hour'))
