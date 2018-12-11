@@ -78,7 +78,7 @@ $(function() {
 
         scheduler.config.day_date = "%l";
         scheduler.config.details_on_create = true;
-        var days_of_week = ["SUN", "MON", "TUES", "WED", "THURS", "FRI", "SAT"];
+        var days_of_week = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
         scheduler.init('scheduler_here', new Date(0),"week");
         scheduler.attachEvent('onBeforeLightBox', function(id) {
             console.log('event created')
@@ -111,31 +111,37 @@ $(function() {
             var end_day = days_of_week[ev.end_date.getDay()];
             var end_hour = ev.end_date.getHours()
             var end_min = ev.end_date.getMinutes()
-            let new_id = light + ':' + start_day + ':' + start_hour + ':' + start_min + '-' + end_day + ':' + end_hour + ':' + end_min
+            let new_id = light + '-' + start_day + '-' + start_hour + '-' + start_min + '-' + end_day + '-' + end_hour + '-' + end_min
             scheduler.changeEventId(ev.id, new_id);
             var start = {
                 "max_setting": max,
                 "min_setting": min,
-                "day": start_day,
+                "day_of_week": start_day,
                 "hour": start_hour,
                 "minute": start_min,
-                "schedule_id": light + ':' + start_day + ':' + start_hour + ':' + start_min + '-' + end_day + ':' + end_hour + ':' + end_min
+                "schedule_id": new_id,
+                "light_id": light,
+                "name": "milo"
             };
 
             var end = {
                 "max_setting": -1,
                 "min_setting": -1,
-                "day": end_day,
+                "day_of_week": end_day,
                 "hour": end_hour,
                 "minute": end_min,
-                "schedule_id": light + ':' + start_day + ':' + start_hour + ':' + start_min + '-' + end_day + ':' + end_hour + ':' + end_min
+                "schedule_id": new_id,
+                "light_id": light,
+                "name": "milo"
             }
             console.log(start);
             console.log(end);
+            var data = [start, end];
+            console.log(data);
             $.ajax({
                 type: "POST",
-                url: '/create/' + light + '/',
-                data: [start, end],
+                url: '/create/' + light,
+                data: JSON.stringify(data),
                 contentType: "application/json",
                 success: function(data, textStatus, jqXHR){console.log("sent calendar")},
                 dataType: "json"
@@ -152,7 +158,7 @@ $(function() {
             console.log(id)
             $.ajax({
                 type: "DELETE",
-                url: '/delete/' + id + '/',
+                url: '/delete/' + id,
                 dataType: 'json',
                 success: function(data, textStatus, jqXHR) { console.log("deleted a calendar")}
             });
@@ -170,7 +176,7 @@ $(function() {
         });
         $.ajax({
             type: "GET",
-            url: '/schedule/' + light + '/',
+            url: '/schedules/' + light + '/',
             dataType: 'json',
             success: function(data, textStatus, jqXHR) {
                 var events = [];
