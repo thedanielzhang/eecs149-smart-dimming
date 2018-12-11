@@ -19,10 +19,12 @@ if entry:
     char_value = entry[0]
     dim_level = (char_value & 0xFF)
     if dim_level < min_dim_level:
+        print("raising lights")
         new_char = (char_value & 0xFF00) | min_dim_level
         c.execute("UPDATE lights SET char_value = ?1, write_flag = 1 WHERE id = ?2", (new_char, id))
         conn.commit()
     elif dim_level > max_dim_level:
+        print("lowering lights")
         new_char = (char_value & 0xFF00) | max_dim_level
         c.execute("UPDATE lights SET char_value = ?1, write_flag = 1 WHERE id = ?2", (new_char, id))
         conn.commit()
