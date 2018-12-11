@@ -181,6 +181,13 @@ def create_schedule(request, pk):
         return JsonResponse(serializer.data, status=201, safe=False)
     return JsonResponse(serializer.errors, status=400, safe=False)
 
+@csrf_exempt
+@api_view(['DELETE'])
+def delete_schedule(request, pk):
+    # pk is the schedule id
+    schedules = Schedule.objects.filter(schedule_id=pk).delete()
+    cron.remove_all(comment=pk)
+    return HttpResponse(status=204)
 
 
 @csrf_exempt
