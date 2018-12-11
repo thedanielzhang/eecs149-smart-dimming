@@ -34,7 +34,7 @@
 
 // Setting some parameters for the BLE Implementation
 
-#define DEVICE_NAME                     "Light 2"   // Device name
+#define DEVICE_NAME                     "Light 1"   // Device name
 #define MANUFACTURER_NAME               "Nordic"    // manufacturer name
 #define APP_ADV_INTERVAL                300         // The advertising interval
 #define APP_ADV_DURATION                18000       // The advertising duration (180 seconds)
