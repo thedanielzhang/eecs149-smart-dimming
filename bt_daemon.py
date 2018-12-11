@@ -41,10 +41,14 @@ while True:
                 c.execute("INSERT INTO lights (mac, connected, write_flag) VALUES(?, 1, 0)", (mac,))
         for entry in c.execute("SELECT mac, char_value FROM lights WHERE write_flag = 0 AND connected = 1"):
             mac = entry[0]
-            if mac in light_manager.connected:
-                char_value = light_manager.connected[mac].read()
-                if char_value != entry[1]:
-                    c.execute("UPDATE lights SET char_value = ?1 WHERE mac = ?2", (char_value, mac))
+            char_value = light_manager.connected[mac].read()
+            if char_value != entry[1]:
+                c.execute("UPDATE lights SET char_value = ?1 WHERE mac = ?2", (char_value, mac))
+        for entry in c.execute("SELECT mac, char_value FROM lights WHERE write_flag = 1 AND connected = 1"):
+            mac = entry[0]
+            char_value = entry[1]
+            light_manager.connected[mac].write(char_value)
+            c.execute("UPDATE lights SET write_flag = 0 WHERE mac = ?", (mac,))
         conn.commit()
 
 
