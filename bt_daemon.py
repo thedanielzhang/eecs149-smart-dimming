@@ -10,7 +10,8 @@ light_manager = LightManager()
 
 conn = sqlite3.connect(light_db)
 c = conn.cursor()
-
+c.execute("UPDATE lights SET write_flag = 0, connected = 0")
+c.execute("UPDATE write_mode SET enabled = 0")
 while True:
     c.execute("SELECT enabled FROM write_mode")
     write_mode = c.fetchone()[0] == 1
@@ -25,14 +26,9 @@ while True:
             c.execute("UPDATE lights SET write_flag = 0 WHERE mac = ?", (mac,))
         conn.commit()
         #tune this interval to optimize performance
-        time.sleep(0.1)
+        time.sleep(0.2)
     else:
         #check for new data from the bluetooth and scan for new devices
-        for entry in c.execute("SELECT mac, char_value FROM lights where write_flag = 0 AND connected = 1"):
-            mac = entry[0]
-            char_value = light_manager.connected[mac].read()
-            if char_value != entry[1]:
-                c.execute("UPDATE lights SET char_value = ?1 WHERE mac = ?2", (char_value, mac))
         light_manager.scan(4)
         light_manager.connect()
         c.execute("SELECT mac FROM lights")
@@ -43,6 +39,12 @@ while True:
         for mac in light_manager.connected:
             if mac not in db_macs:
                 c.execute("INSERT INTO lights (mac, connected, write_flag) VALUES(?, 1, 0)", (mac,))
+        for entry in c.execute("SELECT mac, char_value FROM lights WHERE write_flag = 0 AND connected = 1"):
+            mac = entry[0]
+            if mac in light_manager.connected:
+                char_value = light_manager.connected[mac].read()
+                if char_value != entry[1]:
+                    c.execute("UPDATE lights SET char_value = ?1 WHERE mac = ?2", (char_value, mac))
         conn.commit()
 
 

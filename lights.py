@@ -46,18 +46,23 @@ class BucklerBT:
 			print("not connected!")
 			return
 		char_data = self.char.read()
-		print("recieved data:")
-		print(char_data)
-		if len(char_data) == 4:
-			print("data valid")
-			return char_data[0] | (char_data[1] << 8)
+		if char_data:
+			print("recieved data:")
+			print(char_data)
+			if len(char_data) == 4:
+				print("data valid")
+				return char_data[0] | (char_data[1] << 8)
 		return None
 
 	def write(self, char_value):
 		if not self.char:
 			print("not connected!")
 			return
-		self.char.write(bytes([char_value & 0xFF, (char_value >> 8) & 0xFF, 0, 0]))
+		print(char_value)
+		dim_level = char_value & 0xFF
+		config = (char_value >> 8) & 0xFF
+		print(config, dim_level)
+		self.char.write(bytes([dim_level, config, 0, 0]))
 
 class LightManager:
 	LIGHT_SERVICE_UUID = "0000f00d-1212-efde-1523-785fef13d123"

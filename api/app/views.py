@@ -32,11 +32,11 @@ def dashboard(request):
     unconfigured_lights = []
     for (mac, connected) in c.execute("SELECT mac, connected FROM lights WHERE name IS NULL"):
         unconfigured_lights.append({'mac':mac,'connected':connected==1})
-    c.execute("SELECT char_value, connected, name FROM lights WHERE id = ?", (id,))
+    c.execute("SELECT char_value, connected, name FROM lights WHERE id = ? AND char_value IS NOT NULL", (id,))
     current_light = {}
     entry = c.fetchone()
     char_value = entry[0]
-    if entry and char_value and not mac:
+    if entry and not mac:
         current_light['light_level'] = 255 - (char_value & 0xFF)
         current_light['source'] = (char_value >> 8) & 0x7
         current_light['light_tracking'] = ((char_value >> 11) & 1) == 1

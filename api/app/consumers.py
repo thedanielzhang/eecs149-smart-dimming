@@ -11,16 +11,19 @@ class LightSocketConsumer(WebsocketConsumer):
 		print("connected light socket")
 		self.accept()
 		self.buckler_id = self.scope["url_route"]["kwargs"]["id"]
+		print("id:", self.buckler_id)
 		self.char_value = None
 		conn = sqlite3.connect(light_db)
 		c = conn.cursor()
-		c.execute('SELECT char_value FROM lights WHERE id = ?', self.buckler_id)
+		c.execute('SELECT char_value FROM lights WHERE id = ? AND char_value IS NOT NULL', (self.buckler_id,))
 		entry = c.fetchone()
-		char_value = entry[0]
-		if entry and char_value:
-			self.char_value = char_value
+		print(entry)
+		if entry:
+			self.char_value = int(entry[0])
 			c.execute('UPDATE write_mode SET enabled = 1')
 			conn.commit()
+		else:
+			print("no entry or char_value")
 
 	def disconnect(self, close_code):
 		print("disconnected light socket")
@@ -31,7 +34,8 @@ class LightSocketConsumer(WebsocketConsumer):
 		pass
 
 	def receive(self, text_data):
-		if not self.char_value:
+		if self.char_value == None:
+			print("no char_value, skipping")
 			return
 		data = json.loads(text_data)
 		if 'motion_tracking' in data:
@@ -60,16 +64,16 @@ class LightNameConsumer(WebsocketConsumer):
 
 	def receive(self, text_data):
 		data = json.loads(text_data)
+		print('received ' + str(data))
 		conn = sqlite3.connect(light_db)
 		c = conn.cursor()
 		if 'name' in data and 'mac' in data:
-			c.execute("SELECT id FROM lights ORDER BY id ASC")
+			c.execute("SELECT id FROM lights WHERE id IS NOT NULL ORDER BY id DESC")
 			current_id = c.fetchone()
-			next_id = (current_id[0] + 1) if current_id and current_id[0] else 0
+			next_id = (current_id[0] + 1) if current_id else 0
 			c.execute("UPDATE lights SET name = ?1, id = ?2 WHERE mac = ?3", (data['name'], next_id, data['mac']))
-			conn.commit()
 			self.send(text_data=json.dumps({'name_set':True}))
 		elif 'flash' in data and 'mac' in data:
 			c.execute("UPDATE write_mode SET enabled = 1")
-			c.execute("UPDATE lights SET char_value = ?1 WHERE mac = ?2", (0x0500 if data['flash'] else 0x05FF, data['mac']))
-			flash.delay(data['mac'])
+			c.execute("UPDATE lights SET char_value = ?1, write_flag = 1 WHERE mac = ?2", (0x0500 if data['flash'] else 0x05FF, data['mac']))
+		conn.commit()

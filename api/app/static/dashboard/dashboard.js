@@ -21,6 +21,7 @@ $(function() {
             name_socket.send(JSON.stringify({'name':name,'mac':mac}));
         });
         $('#lightNameFlash').click(function() {
+            console.log('clicked');
             var turn_on = false;
             if ($(this).html() == "Flash On") {
                 turn_on = true;
@@ -40,18 +41,30 @@ $(function() {
         socket.onmessage = function(event) {
             console.log("received " + event.data);
          }
-        //let light_url = '/lights/' + light + '/';
+        var can_send = true;
+        var debounce_timer = null;
         var slider_changed = function() {
-            var new_dim_level = 255 - slider.getValue();
-            //send it over bluetooth
-            console.log(new_dim_level);
-            socket.send(JSON.stringify({"dim_level":new_dim_level}));
+            clearTimeout(debounce_timer);
+            debounce_timer = setTimeout(function() {
+                var new_dim_level = 255-slider.getValue();
+                socket.send(JSON.stringify({'dim_level':new_dim_level}));
+            }, 50);
+            if (can_send) {
+                can_send = false;
+                setTimeout(function() {
+                    can_send = true;
+                }, 100);
+                var new_dim_level = 255 - slider.getValue();
+                //send it over bluetooth
+                console.log(new_dim_level);
+                socket.send(JSON.stringify({"dim_level":new_dim_level}));
+            }
         }
 
         $('#light-'+light).addClass('active');
 
         if ($('#light-slide').length) {
-            var slider = $('#light-slide').slider().on('slide', slider_changed).data('slider')
+            var slider = $('#light-slide').slider().on('change', slider_changed).data('slider')
         }
         $('input#ambient-tracking-check').change(function() {
             let light_tracking_enabled = ($('input#ambient-tracking-check').is(':checked'));
