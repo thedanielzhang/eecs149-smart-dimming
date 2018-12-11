@@ -9,5 +9,6 @@ urlpatterns = [
     path('scan/', views.scan),
     path('connect/', views.connect),
     path('connect/<int:pk>/', views.connect_specific),
-    path('dashboard/', views.dashboard)
+    path('dashboard/', views.dashboard),
+    path('create/<int:pk>', views.create_schedule)
 ]

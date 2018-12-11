@@ -9,7 +9,8 @@ class ScheduleSerializer(serializers.Serializer):
     day_of_week = serializers.CharField(required=False, allow_blank=True, max_length=100)
     hour = serializers.IntegerField(required=True)
     minute = serializers.IntegerField(required=True)
-    schedule_id = serializers.IntegerField(required=True)
+    schedule_id = serializers.CharField(required=False, allow_blank=True, max_length=100)
+    light_id = serializers.IntegerField(required=True)
     """
     max_setting = serializers.ListTextField(
         base_field=serializers.IntegerField()
@@ -41,6 +42,7 @@ class ScheduleSerializer(serializers.Serializer):
         instance.hour = validated_data.get('hour', instance.hour)
         instance.minute = validated_data.get('minute', instance.minute)
         instance.schedule_id = validated_data.get('schedule_id', instance.schedule_id)
+        instance.light_id = validated_data.get('light_id', instance.light_id)
         instance.save()
         return instance
 

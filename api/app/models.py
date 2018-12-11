@@ -12,7 +12,8 @@ class Schedule(models.Model):
     day_of_week = models.CharField(max_length=100, blank=True, default='')
     hour = models.IntegerField(default=0)
     minute = models.IntegerField(default=0)
-    schedule_id = models.IntegerField(default=0)
+    schedule_id = models.CharField(max_length=100, blank=True, default='')
+    light_id = models.IntegerField(default=0)
     """
     max_setting = django_models.ListTextField(
         base_field=models.IntegerField()

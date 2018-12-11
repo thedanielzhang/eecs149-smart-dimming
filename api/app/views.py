@@ -11,7 +11,7 @@ from rest_framework import status
 from bluepy.btle import Scanner, DefaultDelegate
 from bluepy import btle
 from app.apps import devices
-from crontab import CronTab
+from app.apps import cron
 import struct
 import sqlite3
 from django.conf import settings
@@ -56,7 +56,7 @@ def configure_light(request):
 @api_view(['GET', 'POST'])
 def light_general(request):
     # GET all and POST methods
-
+    
     if request.method == 'GET':
         lights = Light.objects.all()
         serializer = LightSerializer(lights, many=True)
@@ -106,7 +106,7 @@ def light_specific(request, pk):
 @api_view(['GET', 'POST'])
 def schedule_general(request):
     # GET all and POST methods
-
+    
     if request.method == 'GET':
         schedules = Schedule.objects.all()
         serializer = ScheduleSerializer(schedules, many=True)
@@ -123,15 +123,14 @@ def schedule_general(request):
 @api_view(['GET', 'PUT', 'DELETE'])
 def schedule_specific(request, pk):
     # GET, UPDATE, and DELETE specific light
-
-    try:
-        schedule = Schedule.objects.get(pk=pk)
-    except Schedule.DoesNotExist:
-        return HttpResponse(status=404)
-
+    """ pk is light_id """
+    
     if request.method == 'GET':
-        serializer = ScheduleSerializer(schedule)
-        return JsonResponse(serializer.data)
+        for job in cron:
+            print(job)
+        schedules = Schedule.objects.filter(light_id=pk)
+        serializer = ScheduleSerializer(schedules, many=True)
+        return JsonResponse(serializer.data, safe=False)
     elif request.method == 'PUT':
         data = JSONParser().parse(request)
         serializer = ScheduleSerializer(schedule, data=data)
@@ -163,15 +162,24 @@ def scan(request):
 def create_schedule(request, pk):
     """ pk is light id """
     data = JSONParser().parse(request)
+    print("We are in create_schedule")
     serializer = ScheduleSerializer(data=data, many=True)
+    
     if serializer.is_valid():
-        cron = CronTab()
+        
+
+        print(serializer.data)
         for event in serializer.data:
-            job = cron.new(command='my command', comment=str(pk))
-            job.dow.on(event['day_of_week']).hour.on(event['hour']).minute.on(event['minute'])
+            
+            job = cron.new(command='my command', comment=event.get('schedule_id'))
+            job.dow.on(event.get('day_of_week'))
+            
+            job.hour.on(event.get('hour'))
+            job.minute.on(event.get('minute'))
+            cron.write()
         serializer.save()
-        return JsonResponse(serializer.data, status=201)
-    return JsonResponse(serializer.errors, status=400)
+        return JsonResponse(serializer.data, status=201, safe=False)
+    return JsonResponse(serializer.errors, status=400, safe=False)
 
 
 
