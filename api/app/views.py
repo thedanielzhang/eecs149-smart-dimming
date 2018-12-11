@@ -5,7 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 from app.models import Schedule, Light
-from app.serializers import ScheduleSerializer, LightSerializer, ScanSerializer
+from app.serializers import ScheduleSerializer, LightSerializer, ScanSerializer, EventSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from bluepy.btle import Scanner, DefaultDelegate
@@ -128,9 +128,53 @@ def schedule_specific(request, pk):
     if request.method == 'GET':
         for job in cron:
             print(job)
-        schedules = Schedule.objects.filter(light_id=pk)
-        serializer = ScheduleSerializer(schedules, many=True)
-        return JsonResponse(serializer.data, safe=False)
+        schedulesModels = Schedule.objects.filter(light_id=pk)
+        scheduleSerializer = ScheduleSerializer(schedulesModels, many=True)
+        events = []
+        schedules = scheduleSerializer.data
+        for i in range(0, len(schedules), 2):
+            event = {}
+            print(schedules[i])
+            event['schedule_id'] = schedules[i].get('schedule_id')
+            event['text'] = "Min: " + str(schedules[i].get('min_setting')) + "%\nMax: " + str(schedules[i].get('max_setting')) + "%"
+            start_date = ""
+            if schedules[i].get('day_of_week') == "MON":
+                start_date = "12/29/1969 "
+            elif schedules[i].get('day_of_week') == "TUE":
+                start_date = "12/30/1969 "
+            elif schedules[i].get('day_of_week') == "WED":
+                start_date = "12/31/1969 "
+            elif schedules[i].get('day_of_week') == "THU":
+                start_date = "1/1/1970 "
+            elif schedules[i].get('day_of_week') == "FRI":
+                start_date = "1/2/1970 "
+            elif schedules[i].get('day_of_week') == "SAT":
+                start_date = "1/3/1970 "
+            elif schedules[i].get('day_of_week') == "SUN":
+                start_date = "1/4/1970 "
+            event['start_date'] = start_date + str(schedules[i].get('hour')) + ":" + str(schedules[i].get('minute'))
+
+
+            end_date = ""
+            if schedules[i+1].get('day_of_week') == "MON":
+                end_date = "12/29/1969 "
+            elif schedules[i+1].get('day_of_week') == "TUE":
+                end_date = "12/30/1969 "
+            elif schedules[i+1].get('day_of_week') == "WED":
+                end_date = "12/31/1969 "
+            elif schedules[i+1].get('day_of_week') == "THU":
+                end_date = "1/1/1970 "
+            elif schedules[i+1].get('day_of_week') == "FRI":
+                end_date = "1/2/1970 "
+            elif schedules[i+1].get('day_of_week') == "SAT":
+                end_date = "1/3/1970 "
+            elif schedules[i+1].get('day_of_week') == "SUN":
+                end_date = "1/4/1970 "
+            event['end_date'] = end_date + str(schedules[i+1].get('hour')) + ":" + str(schedules[i+1].get('minute'))
+
+            events.append(event)
+        eventSerializer = EventSerializer(events, many=True)
+        return JsonResponse(eventSerializer.data, safe=False)
     elif request.method == 'PUT':
         data = JSONParser().parse(request)
         serializer = ScheduleSerializer(schedule, data=data)

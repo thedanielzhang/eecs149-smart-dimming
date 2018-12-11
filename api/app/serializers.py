@@ -69,3 +69,11 @@ class ScanSerializer(serializers.Serializer):
     addr = serializers.CharField(required=False, allow_blank=True, max_length=100)
     addrType = serializers.CharField(required=False, allow_blank=True, max_length=100)
     rssi = serializers.CharField(required=False, allow_blank=True, max_length=100)
+
+
+class EventSerializer(serializers.Serializer):
+    schedule_id = serializers.CharField(required=False, allow_blank=True, max_length=100)
+    text = serializers.CharField(required=False, allow_blank=True, max_length=100)
+    start_date = serializers.CharField(required=False, allow_blank=True, max_length=100)
+    end_date = serializers.CharField(required=False, allow_blank=True, max_length=100)
+

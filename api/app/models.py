@@ -45,4 +45,15 @@ class Light(models.Model):
 
     class Meta:
         ordering = ('created',)
-    
+   
+
+
+# Class representing return event
+class Event(models.Model):
+    schedule_id = models.CharField(max_length=100, blank=True, default='')
+    text = models.CharField(max_length=100, blank=True, default='')
+    start_date = models.CharField(max_length=100, blank=True, default='')
+    end_date = models.CharField(max_length=100, blank=True, default='')
+
+    class Meta:
+        ordering = ('schedule_id',)
