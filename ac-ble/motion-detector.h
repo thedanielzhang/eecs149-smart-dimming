@@ -18,4 +18,6 @@ uint8_t poll_motion_detector(void);
 
 void restart_motion_timer(void);
 
+extern uint8_t motion_set_point;
+
 #endif
