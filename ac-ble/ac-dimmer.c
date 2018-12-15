@@ -3,6 +3,8 @@
 #include "nrf.h"
 #include "nrf_drv_gpiote.h"
 #include "tasks.h"
+#include "motion-detector.h"
+#include "light-sensor.h"
 
 static const uint32_t ac_out_pin = 2;
 static const uint32_t zc_int_pin = 5;
@@ -46,6 +48,10 @@ void set_dim_level(uint8_t dim_level, uint8_t source) {
 
 	current_dim_level = dim_level;
 	current_source = source;
+
+	if (source != SOURCE_LIGHT_SENSOR && source != SOURCE_SCHEDULE) {
+			restart_motion_timer();
+	}
 
 	start_light_changed_timer();
 }

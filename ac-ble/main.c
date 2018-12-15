@@ -15,8 +15,6 @@
 #include "custom-ble.h"
 #include "configuration.h"
 
-static uint8_t motion_set_point = 0;
-
 static void log_init(void)
 {
     ret_code_t err_code = NRF_LOG_INIT(NULL);
@@ -27,13 +25,14 @@ static void log_init(void)
 
 int main(void)
 {
+  setup_light_sensor();
     create_timers();
 
     setup_dimmer();
     //set_dim_level(100);
     setup_motion_detector();
     setup_manual_switch();
-    setup_light_sensor();
+
 
     bool erase_bonds = false;
 
@@ -61,10 +60,10 @@ int main(void)
             light_level_changed = false;
             uint8_t source = get_current_source();
             if (source != SOURCE_LIGHT_SENSOR) {
-                save_lux();
-                if (source != SOURCE_MOTION) {
-                  motion_set_point = get_dim_level();
-                }
+              save_lux();
+            }
+            if (source != SOURCE_MOTION) {
+              motion_set_point = get_dim_level();
             }
             //if it was not changed over bluetooth
             if (source != SOURCE_APP_SLIDER && source != SOURCE_SCHEDULE) {
@@ -96,7 +95,7 @@ int main(void)
             } else {
                 more_dim(SOURCE_MANUAL);
             }
-        } else if (motion_tracking_enabled && get_dim_level() == 0xFF && !get_last_switch_state() && (motion_history) == 0xFF) {
+        } else if (motion_tracking_enabled && !get_last_switch_state() && (motion_history) == 0xFF) {
             //turn on
             set_dim_level(motion_set_point, SOURCE_MOTION);
             restart_motion_timer();

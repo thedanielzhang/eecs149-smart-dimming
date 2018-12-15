@@ -16,10 +16,10 @@ static void on_write(ble_os_t * p_our_service, ble_evt_t const * p_ble_evt)
     if (p_evt_write->handle == p_our_service->char_handles.value_handle)
     {
         uint32_t char_data = *((uint32_t*)p_evt_write->data);
-        //printf("Characteristic written to. Value: 0x%lX (%ld)\n", char_data, char_data);
+        printf("Characteristic written to. Value: 0x%lX (%ld)\n", char_data, char_data);
 
         /* Char data:
-         * MMMMMMMMmmmmmmmmxxxccsssllllllll
+         * xxxccsssllllllll
          *
          * l = dim level bit
          * s = source bit
@@ -27,19 +27,19 @@ static void on_write(ble_os_t * p_our_service, ble_evt_t const * p_ble_evt)
          *     - lo bit = light tracking
          *     - hi bit = high tracking
          * x = not used
-         * m = min level bit
-         * M = max level bit
-         *
          */
         uint8_t new_dim_level = char_data & 0xFF;
-        uint8_t max_level = (char_data >> 16) & 0xFF;
-        uint8_t min_level = (char_data >> 24) & 0xFF;
+        //uint8_t max_level = (char_data >> 16) & 0xFF;
+        //uint8_t min_level = (char_data >> 24) & 0xFF;
         uint8_t source = (char_data >> 8) & 0x7;
-        if (new_dim_level < min_level) {
-          set_dim_level(min_level, source);
-        } else if (new_dim_level > max_level) {
-          set_dim_level(max_level, source);
-        } else if (new_dim_level != get_dim_level()) {
+        //if (new_dim_level < min_level) {
+        //  set_dim_level(min_level, source);
+        //} else if (new_dim_level > max_level) {
+        //  set_dim_level(max_level, source);
+        //} else if (new_dim_level != get_dim_level()) {
+        //  set_dim_level(new_dim_level, source);
+        //}
+        if (new_dim_level != get_dim_level()){
           set_dim_level(new_dim_level, source);
         }
         motion_tracking_enabled = (char_data >> 12)  & 1;

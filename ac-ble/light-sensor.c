@@ -36,7 +36,8 @@ void setup_light_sensor(void) {
 }
 
 float poll_light_sensor(void){
-  return max44009_read_lux();
+    return max44009_read_lux();
+
 }
 
 void save_lux(void){
